@@ -1,0 +1,6 @@
+pyvisa  
+numpy  
+matplotlib 
+telnetlib3
+windfreak
+requests
