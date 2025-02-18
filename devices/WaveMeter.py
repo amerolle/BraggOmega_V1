@@ -37,7 +37,7 @@ class Wavemeter:
                 print('OVERexposed')
                 return None
             if data!=0.0:
-                print(f"✔ Wavemeter Channel {channel}: {data} Hz")
+                print(f"✔ Wavemeter Channel {channel}: {data} GHz")
                 return data
             else:
                 print("No signal or not the good channel:", data)

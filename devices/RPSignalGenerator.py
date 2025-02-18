@@ -1,9 +1,14 @@
-import devices.utils.redpitaya_scpi as scpi
+import devices.vendor.redpitaya_scpi as scpi
 
 # Methods:
 # connect() - Establishes a connection to the Red Pitaya.
+
+#Channel 1:
 # set_trigger_pulse(high_level: float, low_level: float, period: float, duty_cycle: float) - Configures a pulse train on Channel 1.
+# Channele 2: 
 # set_dc_voltage(voltage: float) - Sets a DC voltage on Channel 2 for frequency control.
+# set_triangle_ramp(high_voltage: float, low_voltage: float, frequency: float) - Configures a triangle (ramp) waveform on Channel 2.
+
 # disable_outputs() - Turns off both signal generator outputs.
 # disconnect() - Closes the connection to Red Pitaya.
 
@@ -11,7 +16,7 @@ class RedPitayaSignalGenerator:
     """
     Driver for the Red Pitaya used as a 2-channel signal generator.
     - Channel 1: PWM trigger pulse.
-    - Channel 2: Fixed DC voltage.
+    - Channel 2: Fixed DC voltage or Triangle waveform.
     """
 
     def __init__(self, ip: str = "10.0.2.102"):
@@ -58,6 +63,30 @@ class RedPitayaSignalGenerator:
         self.rp.tx_txt('SOUR1:TRig:INT')
         print(f"Channel 1 set to PWM: freq={frequency:.3f} Hz, amplitude={amplitude} V, offset={offset} V, duty cycle={duty_cycle}%")
 
+    def set_triangle_ramp(self, high_voltage: float, low_voltage: float, frequency: float):
+        """
+        Configures Channel 2 to output a triangle (ramp) waveform.
+
+        Args:
+            high_voltage (float): The maximum voltage (peak) of the triangle wave.
+            low_voltage (float): The minimum voltage (trough) of the triangle wave.
+            frequency (float): The frequency of the triangle wave in Hz.
+        """
+        amplitude = high_voltage - low_voltage
+        offset = (high_voltage + low_voltage) / 2.0
+
+        # Set Channel 2 function to triangle waveform
+        self.rp.tx_txt('SOUR2:FUNC TRIANGLE')
+        # Set the frequency
+        self.rp.tx_txt('SOUR2:FREQ:FIX ' + str(frequency))
+        # Set amplitude and offset
+        self.rp.tx_txt('SOUR2:VOLT ' + str(amplitude))
+        self.rp.tx_txt('SOUR2:VOLT:OFFS ' + str(offset))
+        # Enable output on Channel 2 and trigger the waveform generation
+        self.rp.tx_txt('OUTPUT2:STATE ON')
+        self.rp.tx_txt('SOUR2:TRig:INT')
+        print(f"Channel 2 set to TRIANGLE ramp: frequency={frequency:.3f} Hz, amplitude={amplitude} V, offset={offset} V")
+
     def set_dc_voltage(self, voltage: float):
         """
         Sets Channel 2 to a fixed DC voltage.
@@ -68,10 +97,10 @@ class RedPitayaSignalGenerator:
             voltage (float): Desired voltage in Volts.
         """
         # Clamp voltage to [-5, 5] then scale to [-1, 1]
-        if voltage > 5:
-            voltage = 5
-        elif voltage < -5:
-            voltage = -5
+        if voltage > 5.5:
+            voltage = 5.5
+        elif voltage < -5.5:
+            voltage = -5.5
         scaled_voltage = voltage / 5.0
 
         if scaled_voltage >= 0:
