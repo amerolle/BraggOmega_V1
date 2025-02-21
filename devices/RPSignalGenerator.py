@@ -1,11 +1,12 @@
 import devices.vendor.redpitaya_scpi as scpi
-
+import time
+import matplotlib.pyplot as plt
 # Methods:
 # connect() - Establishes a connection to the Red Pitaya.
 
 #Channel 1:
 # set_trigger_pulse(high_level: float, low_level: float, period: float, duty_cycle: float) - Configures a pulse train on Channel 1.
-# Channele 2: 
+# Channel 2: 
 # set_dc_voltage(voltage: float) - Sets a DC voltage on Channel 2 for frequency control.
 # set_triangle_ramp(high_voltage: float, low_voltage: float, frequency: float) - Configures a triangle (ramp) waveform on Channel 2.
 
@@ -86,7 +87,7 @@ class RedPitayaSignalGenerator:
         self.rp.tx_txt('OUTPUT2:STATE ON')
         self.rp.tx_txt('SOUR2:TRig:INT')
         print(f"Channel 2 set to TRIANGLE ramp: frequency={frequency:.3f} Hz, amplitude={amplitude} V, offset={offset} V")
-
+   
     def set_dc_voltage(self, voltage: float):
         """
         Sets Channel 2 to a fixed DC voltage.
@@ -114,6 +115,33 @@ class RedPitayaSignalGenerator:
         self.rp.tx_txt('SOUR2:TRig:INT')
         print(f"Channel 2 set to DC voltage (after amplifer): {voltage} V")
 
+    def measure_absorption_saturation(self, duration=5):
+        """
+        Measures the Absorption Saturée (AS) signal from IN1 while scanning with a triangle wave on OUT2.
+        """
+        print("Starting Absorption Saturée measurement...")
+        
+        # Start the acquisition
+        self.rp.tx_txt('ACQ:START')
+        self.rp.tx_txt('ACQ:TRIG NOW')
+        time.sleep(duration)  # Let the scan run for the desired duration
+
+        # Retrieve data from IN1
+        self.rp.tx_txt('ACQ:SOUR1:DATA?')
+        raw_data = self.rp.rx_txt()
+        absorption_signal = [float(val) for val in raw_data.strip('{}\n\r').split(',')]
+
+        # Plot the absorption signal
+        plt.figure(figsize=(10, 5))
+        plt.plot(absorption_signal, label="Signal d'Absorption Saturée (IN1)")
+        plt.title("Absorption Saturée mesurée")
+        plt.xlabel("Échantillons")
+        plt.ylabel("Amplitude (V)")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+        return absorption_signal
     def disable_outputs(self):
         """Turns off both signal generator outputs."""
         if self.rp:
@@ -127,3 +155,4 @@ class RedPitayaSignalGenerator:
             self.rp.close()
             self.rp = None
             print("Disconnected from Red Pitaya.")
+

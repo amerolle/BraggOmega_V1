@@ -6,7 +6,7 @@ class Wavemeter:
     Wavemeter driver to fetch frequency data from an HTTP API.
     """
 
-    def __init__(self, base_url: str = "http://localhost:5000"):
+    def __init__(self, base_url: str = "http://192.168.0.169:5000"):
         """
         Initializes the Wavemeter.
 
@@ -37,7 +37,7 @@ class Wavemeter:
                 print('OVERexposed')
                 return None
             if data!=0.0:
-                print(f"✔ Wavemeter Channel {channel}: {data} GHz")
+                print(f"Wavemeter Channel {channel}: {data} GHz")
                 return data
             else:
                 print("No signal or not the good channel:", data)
